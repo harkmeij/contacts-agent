@@ -13,6 +13,10 @@ export interface Contact {
   email: string | null;
   phone: string | null;
   instagram: string | null;
+  linkedin: string | null;
+  twitter: string | null;
+  youtube: string | null;
+  tiktok: string | null;
   website: string | null;
   notes: string | null;
   status: ContactStatus;
@@ -44,6 +48,10 @@ export function initDb(): void {
       email       TEXT,
       phone       TEXT,
       instagram   TEXT,
+      linkedin    TEXT,
+      twitter     TEXT,
+      youtube     TEXT,
+      tiktok      TEXT,
       website     TEXT,
       notes       TEXT,
       status      TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','inactive','pending')),
@@ -58,6 +66,15 @@ export function initDb(): void {
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Migrate existing DBs — add new columns if they don't exist yet
+  for (const col of ["linkedin", "twitter", "youtube", "tiktok"]) {
+    try {
+      db.exec(`ALTER TABLE contacts ADD COLUMN ${col} TEXT`);
+    } catch {
+      // Column already exists — safe to ignore
+    }
+  }
 
   console.log(`[contacts] DB initialized at ${dbPath}`);
 }
@@ -75,13 +92,17 @@ export function addContact(
     email?: string;
     phone?: string;
     instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+    youtube?: string;
+    tiktok?: string;
     website?: string;
     notes?: string;
   } = {},
 ): Contact {
   const stmt = getDb().prepare(`
-    INSERT INTO contacts (type, name, company, email, phone, instagram, website, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO contacts (type, name, company, email, phone, instagram, linkedin, twitter, youtube, tiktok, website, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const result = stmt.run(
     type,
@@ -90,6 +111,10 @@ export function addContact(
     fields.email ?? null,
     fields.phone ?? null,
     fields.instagram ?? null,
+    fields.linkedin ?? null,
+    fields.twitter ?? null,
+    fields.youtube ?? null,
+    fields.tiktok ?? null,
     fields.website ?? null,
     fields.notes ?? null,
   );
@@ -105,12 +130,16 @@ export function updateContact(
     email: string | null;
     phone: string | null;
     instagram: string | null;
+    linkedin: string | null;
+    twitter: string | null;
+    youtube: string | null;
+    tiktok: string | null;
     website: string | null;
     notes: string | null;
     status: ContactStatus;
   }>,
 ): Contact | null {
-  const allowed = ["type", "name", "company", "email", "phone", "instagram", "website", "notes", "status"];
+  const allowed = ["type", "name", "company", "email", "phone", "instagram", "linkedin", "twitter", "youtube", "tiktok", "website", "notes", "status"];
   const sets: string[] = [];
   const values: unknown[] = [];
 

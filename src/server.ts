@@ -10,6 +10,7 @@ import {
   logInteraction,
 } from "./contacts.js";
 import type { ContactType, ContactStatus } from "./contacts.js";
+import { enrichContact } from "./enrich.js";
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
@@ -71,6 +72,10 @@ app.post("/contacts", (req: Request, res: Response) => {
     email?: string;
     phone?: string;
     instagram?: string;
+    linkedin?: string;
+    twitter?: string;
+    youtube?: string;
+    tiktok?: string;
     website?: string;
     notes?: string;
   };
@@ -80,6 +85,11 @@ app.post("/contacts", (req: Request, res: Response) => {
   }
   const contact = addContact(type, name, fields);
   res.status(201).json(contact);
+
+  // Fire-and-forget enrichment — runs after response is sent
+  enrichContact(contact.id).catch((err) =>
+    console.error(`[contacts] Enrichment failed for id=${contact.id}:`, err),
+  );
 });
 
 // PATCH /contacts/:id — update contact
@@ -102,6 +112,10 @@ app.patch("/contacts/:id", (req: Request, res: Response) => {
     email: string | null;
     phone: string | null;
     instagram: string | null;
+    linkedin: string | null;
+    twitter: string | null;
+    youtube: string | null;
+    tiktok: string | null;
     website: string | null;
     notes: string | null;
     status: ContactStatus;
